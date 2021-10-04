@@ -18,6 +18,7 @@ app.secret_key = os.environ.get("SECRET_KEY")
 
 mongo = PyMongo(app)
 
+
 @app.route("/")
 @app.route("/get_tasks")
 def get_tasks():
@@ -30,15 +31,15 @@ def register():
     if request.method == "POST":
         # check if user exist in db
         existing_user = mongo.db.users.find_one(
-            {"username" : request.form.get("username").lower()})
+            {"username": request.form.get("username").lower()})
 
         if existing_user:
             flash("Username already exist")
             return redirect(url_for("register"))
 
         register = {
-            "username" : request.form.get("username").lower(),
-            "password" : generate_password_hash(request.form.get("password"))
+            "username": request.form.get("username").lower(),
+            "password": generate_password_hash(request.form.get("password"))
         }
         mongo.db.users.insert_one(register)
 
@@ -75,7 +76,7 @@ def login():
     return render_template("login.html")
 
 
-@app.route("/profile/<username>", methods = ["GET", "POST"])
+@app.route("/profile/<username>", methods=["GET", "POST"])
 def profile(username):
     username = mongo.db.users.find_one(
         {"username": session["user"]})["username"]
@@ -112,7 +113,7 @@ def add_task():
     return render_template("add_task.html", categories=categories)
 
 
-@app.route("/edit_task/<task_id>", methods = ["GET", "POST"])
+@app.route("/edit_task/<task_id>", methods=["GET", "POST"])
 def edit_task(task_id):
     if request.method == "POST":
         is_urgent = "on" if request.form.get("is_urgent") else "off"
@@ -138,6 +139,12 @@ def delete_task(task_id):
     mongo.db.tasks.remove({"_id": ObjectId(task_id)})
     flash("Task Successfully Deleted -")
     return redirect(url_for("get_tasks"))
+
+
+@app.route("/get_categories")
+def get_categories():
+    categories = list(mongo.db.categories.find().sort("category_name", 1))
+    return render_template("categories.html", categories=categories)
 
 
 if __name__ == "__main__":
